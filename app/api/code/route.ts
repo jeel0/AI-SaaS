@@ -1,21 +1,22 @@
 import { auth } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
-import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
+import { OpenAI } from "openai";
 
 //import { checkSubscription } from "@/lib/subscription";
 //import { incrementApiLimit, checkApiLimit } from "@/lib/api-limit";
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
+
+
+const openai =  new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY // This is also the default, can be omitted
 });
 
-const openai = new OpenAIApi(configuration);
-
+/*
 const instructionMessage: ChatCompletionRequestMessage = {
   role: "system",
   content: "You are a code generator. You must answer only in markdown code snippets. Use code comments for explanations."
 };
-
+*/
 export async function POST(
   req: Request
 ) {
@@ -28,7 +29,7 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    if (!configuration.apiKey) {
+    if (!openai.apiKey) {
       return new NextResponse("OpenAI API Key not configured.", { status: 500 });
     }
 
@@ -43,16 +44,16 @@ export async function POST(
       return new NextResponse("Free trial has expired. Please upgrade to pro.", { status: 403 });
     }
 */
-    const response = await openai.createChatCompletion({
+    const response = await openai.completions.create({
       model: "gpt-3.5-turbo",
-      messages: [instructionMessage, ...messages]
+      prompt: "You are a code generator. You must answer only in markdown code snippets. Use code comments for explanations.",
     });
 
  /*   if (!isPro) {
       await incrementApiLimit();
     }
 */
-    return NextResponse.json(response.data.choices[0].message);
+    return NextResponse.json(response.choices[0].text);
   } catch (error) {
     console.log('[CODE_ERROR]', error);
     return new NextResponse("Internal Error", { status: 500 });
